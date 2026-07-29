@@ -242,7 +242,23 @@ h2 {
   cursor: pointer;
 }
 
+.danger-button {
+  border: 1px solid rgba(216, 84, 84, 0.4);
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: rgba(86, 24, 24, 0.9);
+  color: #ffd8d8;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .primary-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.secondary-button:disabled,
+.danger-button:disabled {
   opacity: 0.7;
   cursor: wait;
 }
@@ -281,6 +297,10 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.task-card__actions--stacked {
+  flex-direction: column;
 }
 
 .task-form--compact {
