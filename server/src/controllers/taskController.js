@@ -142,6 +142,48 @@ export async function updateTask(request, response) {
   }
 }
 
+export async function deleteTask(request, response) {
+  const taskId = Number(request.params.id);
+
+  if (!Number.isInteger(taskId) || taskId <= 0) {
+    return response.status(400).json({
+      message: 'El identificador de la tarea no es valido.',
+    });
+  }
+
+  try {
+    const queryText = env.dbTrustedConnection
+      ? `
+        DELETE FROM dbo.tareas
+        OUTPUT DELETED.id
+        WHERE id = ?;
+      `
+      : `
+        DELETE FROM dbo.tareas
+        OUTPUT DELETED.id
+        WHERE id = @id;
+      `;
+
+    const result = await runQuery(queryText, [{ name: 'id', type: db.Int, value: taskId }]);
+
+    if (!result.length) {
+      return response.status(404).json({
+        message: 'La tarea no existe.',
+      });
+    }
+
+    return response.status(200).json({
+      message: 'Tarea eliminada correctamente.',
+      taskId,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: 'No se pudo eliminar la tarea.',
+      error: error.message,
+    });
+  }
+}
+
 export async function createTask(request, response) {
   const task = normalizeTaskPayload(request.body);
   const validationError = validateTaskPayload(task);
