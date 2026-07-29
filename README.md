@@ -19,3 +19,6 @@ Aplicacion CRUD de tareas construida con React, Express y SQL Server.
 1. Instala dependencias en la raiz, `client/` y `server/`.
 2. Copia `server/.env.example` a `server/.env` y completa tus credenciales.
 3. Ejecuta `npm run dev` en la raiz.
+
+Nota: el backend usa por defecto el puerto `4001`.
+Si usas autenticacion de Windows en SQL Server, deja `DB_TRUSTED_CONNECTION=true`.
