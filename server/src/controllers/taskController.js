@@ -14,23 +14,23 @@ function validateTaskPayload(task) {
   const validStates = ['Pendiente', 'En progreso', 'Completada'];
 
   if (!task.titulo) {
-    return 'El titulo es obligatorio.';
+    return 'El título es obligatorio.';
   }
 
   if (task.titulo.length > 100) {
-    return 'El titulo no puede superar los 100 caracteres.';
+    return 'El título no puede superar los 100 caracteres.';
   }
 
   if (task.descripcion.length > 255) {
-    return 'La descripcion no puede superar los 255 caracteres.';
+    return 'La descripción no puede superar los 255 caracteres.';
   }
 
   if (!validStates.includes(task.estado)) {
-    return 'El estado enviado no es valido.';
+    return 'El estado enviado no es válido.';
   }
 
   if (task.fechaLimite && Number.isNaN(Date.parse(task.fechaLimite))) {
-    return 'La fecha limite no tiene un formato valido.';
+    return 'La fecha límite no tiene un formato válido.';
   }
 
   return null;
@@ -71,7 +71,7 @@ export async function updateTask(request, response) {
 
   if (!Number.isInteger(taskId) || taskId <= 0) {
     return response.status(400).json({
-      message: 'El identificador de la tarea no es valido.',
+      message: 'El identificador de la tarea no es válido.',
     });
   }
 
@@ -147,7 +147,7 @@ export async function deleteTask(request, response) {
 
   if (!Number.isInteger(taskId) || taskId <= 0) {
     return response.status(400).json({
-      message: 'El identificador de la tarea no es valido.',
+      message: 'El identificador de la tarea no es válido.',
     });
   }
 
