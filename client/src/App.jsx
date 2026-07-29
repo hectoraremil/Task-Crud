@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getHealthStatus } from './api/health';
-import { createTask, getTasks } from './api/tasks';
+import { createTask, getTasks, updateTask } from './api/tasks';
 import StatusCard from './components/StatusCard';
 
 const initialForm = {
@@ -27,6 +27,13 @@ export default function App() {
   const [taskListStatus, setTaskListStatus] = useState({
     loading: true,
     error: '',
+  });
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editFormData, setEditFormData] = useState(initialForm);
+  const [editStatus, setEditStatus] = useState({
+    loading: false,
+    type: '',
+    message: '',
   });
 
   useEffect(() => {
@@ -83,6 +90,36 @@ export default function App() {
     }));
   }
 
+  function handleEditChange(event) {
+    const { name, value } = event.target;
+
+    setEditFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  function formatDateForInput(dateValue) {
+    return dateValue ? dateValue.slice(0, 10) : '';
+  }
+
+  function startEditing(task) {
+    setEditingTaskId(task.id);
+    setEditFormData({
+      titulo: task.titulo,
+      descripcion: task.descripcion || '',
+      estado: task.estado,
+      fechaLimite: formatDateForInput(task.fecha_limite),
+    });
+    setEditStatus({ loading: false, type: '', message: '' });
+  }
+
+  function cancelEditing() {
+    setEditingTaskId(null);
+    setEditFormData(initialForm);
+    setEditStatus({ loading: false, type: '', message: '' });
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setFormStatus({ loading: true, type: '', message: '' });
@@ -99,6 +136,37 @@ export default function App() {
       });
     } catch (error) {
       setFormStatus({
+        loading: false,
+        type: 'warning',
+        message: error.message,
+      });
+    }
+  }
+
+  async function handleEditSubmit(event) {
+    event.preventDefault();
+
+    if (!editingTaskId) {
+      return;
+    }
+
+    setEditStatus({ loading: true, type: '', message: '' });
+
+    try {
+      const result = await updateTask(editingTaskId, editFormData);
+
+      setTaskList((current) =>
+        current.map((task) => (task.id === editingTaskId ? result.task : task))
+      );
+      setEditStatus({
+        loading: false,
+        type: 'success',
+        message: result.message,
+      });
+      setEditingTaskId(null);
+      setEditFormData(initialForm);
+    } catch (error) {
+      setEditStatus({
         loading: false,
         type: 'warning',
         message: error.message,
@@ -213,14 +281,82 @@ export default function App() {
               ) : (
                 taskList.map((task) => (
                   <article key={task.id} className="task-card">
-                    <div>
-                      <h3>{task.titulo}</h3>
-                      <p>{task.descripcion || 'Sin descripcion'}</p>
-                      <small className="task-card__meta">
-                        Fecha limite: {task.fecha_limite ? task.fecha_limite.slice(0, 10) : 'No definida'}
-                      </small>
-                    </div>
-                    <span className="task-card__badge">{task.estado}</span>
+                    {editingTaskId === task.id ? (
+                      <form className="task-form task-form--compact" onSubmit={handleEditSubmit}>
+                        <label className="field">
+                          <span>Titulo</span>
+                          <input
+                            type="text"
+                            name="titulo"
+                            value={editFormData.titulo}
+                            onChange={handleEditChange}
+                            maxLength="100"
+                            required
+                          />
+                        </label>
+
+                        <label className="field">
+                          <span>Descripcion</span>
+                          <textarea
+                            name="descripcion"
+                            value={editFormData.descripcion}
+                            onChange={handleEditChange}
+                            maxLength="255"
+                            rows="3"
+                          />
+                        </label>
+
+                        <div className="field-row">
+                          <label className="field">
+                            <span>Estado</span>
+                            <select name="estado" value={editFormData.estado} onChange={handleEditChange}>
+                              <option value="Pendiente">Pendiente</option>
+                              <option value="En progreso">En progreso</option>
+                              <option value="Completada">Completada</option>
+                            </select>
+                          </label>
+
+                          <label className="field">
+                            <span>Fecha limite</span>
+                            <input
+                              type="date"
+                              name="fechaLimite"
+                              value={editFormData.fechaLimite}
+                              onChange={handleEditChange}
+                            />
+                          </label>
+                        </div>
+
+                        {editStatus.message ? (
+                          <p className={`message message--${editStatus.type}`}>{editStatus.message}</p>
+                        ) : null}
+
+                        <div className="task-card__actions">
+                          <button className="primary-button" type="submit" disabled={editStatus.loading}>
+                            {editStatus.loading ? 'Actualizando...' : 'Guardar cambios'}
+                          </button>
+                          <button className="secondary-button" type="button" onClick={cancelEditing}>
+                            Cancelar
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <div>
+                          <h3>{task.titulo}</h3>
+                          <p>{task.descripcion || 'Sin descripcion'}</p>
+                          <small className="task-card__meta">
+                            Fecha limite: {task.fecha_limite ? task.fecha_limite.slice(0, 10) : 'No definida'}
+                          </small>
+                        </div>
+                        <div className="task-card__side">
+                          <span className="task-card__badge">{task.estado}</span>
+                          <button className="secondary-button" type="button" onClick={() => startEditing(task)}>
+                            Editar
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </article>
                 ))
               )}
