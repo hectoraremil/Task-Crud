@@ -46,3 +46,17 @@ export async function updateTask(taskId, taskData) {
 
   return data;
 }
+
+export async function deleteTask(taskId) {
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+    method: 'DELETE',
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'No se pudo eliminar la tarea.');
+  }
+
+  return data;
+}

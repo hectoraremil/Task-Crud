@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getHealthStatus } from './api/health';
-import { createTask, getTasks, updateTask } from './api/tasks';
+import { createTask, deleteTask, getTasks, updateTask } from './api/tasks';
 import StatusCard from './components/StatusCard';
 
 const initialForm = {
@@ -32,6 +32,11 @@ export default function App() {
   const [editFormData, setEditFormData] = useState(initialForm);
   const [editStatus, setEditStatus] = useState({
     loading: false,
+    type: '',
+    message: '',
+  });
+  const [deleteStatus, setDeleteStatus] = useState({
+    loadingTaskId: null,
     type: '',
     message: '',
   });
@@ -118,6 +123,30 @@ export default function App() {
     setEditingTaskId(null);
     setEditFormData(initialForm);
     setEditStatus({ loading: false, type: '', message: '' });
+  }
+
+  async function handleDelete(taskId) {
+    setDeleteStatus({ loadingTaskId: taskId, type: '', message: '' });
+
+    try {
+      const result = await deleteTask(taskId);
+
+      setTaskList((current) => current.filter((task) => task.id !== taskId));
+      if (editingTaskId === taskId) {
+        cancelEditing();
+      }
+      setDeleteStatus({
+        loadingTaskId: null,
+        type: 'success',
+        message: result.message,
+      });
+    } catch (error) {
+      setDeleteStatus({
+        loadingTaskId: null,
+        type: 'warning',
+        message: error.message,
+      });
+    }
   }
 
   async function handleSubmit(event) {
@@ -265,6 +294,10 @@ export default function App() {
               <h2>Tareas registradas en el sistema</h2>
             </div>
 
+            {deleteStatus.message ? (
+              <p className={`message message--${deleteStatus.type}`}>{deleteStatus.message}</p>
+            ) : null}
+
             <div className="task-preview">
               {taskListStatus.loading ? (
                 <div className="empty-state">
@@ -351,9 +384,19 @@ export default function App() {
                         </div>
                         <div className="task-card__side">
                           <span className="task-card__badge">{task.estado}</span>
-                          <button className="secondary-button" type="button" onClick={() => startEditing(task)}>
-                            Editar
-                          </button>
+                          <div className="task-card__actions task-card__actions--stacked">
+                            <button className="secondary-button" type="button" onClick={() => startEditing(task)}>
+                              Editar
+                            </button>
+                            <button
+                              className="danger-button"
+                              type="button"
+                              onClick={() => handleDelete(task.id)}
+                              disabled={deleteStatus.loadingTaskId === task.id}
+                            >
+                              {deleteStatus.loadingTaskId === task.id ? 'Eliminando...' : 'Eliminar'}
+                            </button>
+                          </div>
                         </div>
                       </>
                     )}
