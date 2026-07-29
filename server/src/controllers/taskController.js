@@ -64,6 +64,84 @@ export async function getTasks(_request, response) {
   }
 }
 
+export async function updateTask(request, response) {
+  const taskId = Number(request.params.id);
+  const task = normalizeTaskPayload(request.body);
+  const validationError = validateTaskPayload(task);
+
+  if (!Number.isInteger(taskId) || taskId <= 0) {
+    return response.status(400).json({
+      message: 'El identificador de la tarea no es valido.',
+    });
+  }
+
+  if (validationError) {
+    return response.status(400).json({
+      message: validationError,
+    });
+  }
+
+  try {
+    const queryText = env.dbTrustedConnection
+      ? `
+        UPDATE dbo.tareas
+        SET
+          titulo = ?,
+          descripcion = ?,
+          estado = ?,
+          fecha_limite = ?
+        OUTPUT
+          INSERTED.id,
+          INSERTED.titulo,
+          INSERTED.descripcion,
+          INSERTED.estado,
+          INSERTED.fecha_limite,
+          INSERTED.fecha_creacion
+        WHERE id = ?;
+      `
+      : `
+        UPDATE dbo.tareas
+        SET
+          titulo = @titulo,
+          descripcion = @descripcion,
+          estado = @estado,
+          fecha_limite = @fecha_limite
+        OUTPUT
+          INSERTED.id,
+          INSERTED.titulo,
+          INSERTED.descripcion,
+          INSERTED.estado,
+          INSERTED.fecha_limite,
+          INSERTED.fecha_creacion
+        WHERE id = @id;
+      `;
+
+    const result = await runQuery(queryText, [
+      { name: 'titulo', type: db.NVarChar(100), value: task.titulo },
+      { name: 'descripcion', type: db.NVarChar(255), value: task.descripcion || null },
+      { name: 'estado', type: db.NVarChar(20), value: task.estado },
+      { name: 'fecha_limite', type: db.Date, value: task.fechaLimite || null },
+      { name: 'id', type: db.Int, value: taskId },
+    ]);
+
+    if (!result.length) {
+      return response.status(404).json({
+        message: 'La tarea no existe.',
+      });
+    }
+
+    return response.status(200).json({
+      message: 'Tarea actualizada correctamente.',
+      task: result[0],
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: 'No se pudo actualizar la tarea.',
+      error: error.message,
+    });
+  }
+}
+
 export async function createTask(request, response) {
   const task = normalizeTaskPayload(request.body);
   const validationError = validateTaskPayload(task);
