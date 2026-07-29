@@ -240,6 +240,7 @@ h2 {
 .task-preview {
   display: grid;
   gap: 14px;
+  align-content: start;
 }
 
 .empty-state {
