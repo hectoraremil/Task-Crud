@@ -1,8 +1,8 @@
 # Task-Crud
 
-Aplicacion CRUD de tareas construida con React, Express y SQL Server.
+Aplicación CRUD de tareas construida con React, Express y SQL Server.
 
-## Tecnologias
+## Tecnologías
 
 - React + Vite
 - Node.js + Express
@@ -14,11 +14,11 @@ Aplicacion CRUD de tareas construida con React, Express y SQL Server.
 - `server/`: API con Express
 - `database/`: script de base de datos
 
-## Ejecucion
+## Ejecución
 
-1. Instala dependencias en la raiz, `client/` y `server/`.
+1. Instala dependencias en la raíz, `client/` y `server/`.
 2. Copia `server/.env.example` a `server/.env` y completa tus credenciales.
-3. Ejecuta `npm run dev` en la raiz.
+3. Ejecuta `npm run dev` en la raíz.
 
 Nota: el backend usa por defecto el puerto `4001`.
-Si usas autenticacion de Windows en SQL Server, deja `DB_TRUSTED_CONNECTION=true`.
+Si usas autenticación de Windows en SQL Server, deja `DB_TRUSTED_CONNECTION=true`.
