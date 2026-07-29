@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getHealthStatus } from './api/health';
-import { createTask } from './api/tasks';
+import { createTask, getTasks } from './api/tasks';
 import StatusCard from './components/StatusCard';
 
 const initialForm = {
@@ -23,7 +23,11 @@ export default function App() {
     type: '',
     message: '',
   });
-  const [createdTasks, setCreatedTasks] = useState([]);
+  const [taskList, setTaskList] = useState([]);
+  const [taskListStatus, setTaskListStatus] = useState({
+    loading: true,
+    error: '',
+  });
 
   useEffect(() => {
     async function loadHealth() {
@@ -49,6 +53,22 @@ export default function App() {
     loadHealth();
   }, []);
 
+  useEffect(() => {
+    async function loadTasks() {
+      setTaskListStatus({ loading: true, error: '' });
+
+      try {
+        const data = await getTasks();
+        setTaskList(data.tasks);
+        setTaskListStatus({ loading: false, error: '' });
+      } catch (error) {
+        setTaskListStatus({ loading: false, error: error.message });
+      }
+    }
+
+    loadTasks();
+  }, []);
+
   const databaseTone = useMemo(() => {
     if (health.loading) return 'neutral';
     return health.database === 'Conectada' ? 'success' : 'warning';
@@ -70,7 +90,7 @@ export default function App() {
     try {
       const result = await createTask(formData);
 
-      setCreatedTasks((current) => [result.task, ...current].slice(0, 4));
+      setTaskList((current) => [result.task, ...current]);
       setFormData(initialForm);
       setFormStatus({
         loading: false,
@@ -173,18 +193,25 @@ export default function App() {
 
           <article className="panel">
             <div className="panel__header">
-              <span className="panel__kicker">Resultado</span>
-              <h2>Tareas creadas recientemente</h2>
+              <span className="panel__kicker">Listado</span>
+              <h2>Tareas registradas en el sistema</h2>
             </div>
 
             <div className="task-preview">
-              {createdTasks.length === 0 ? (
+              {taskListStatus.loading ? (
                 <div className="empty-state">
-                  <h3>Aun no has creado tareas</h3>
-                  <p>Usa el formulario para registrar la primera tarea del sistema.</p>
+                  <h3>Cargando tareas</h3>
+                  <p>Estamos consultando la informacion guardada en SQL Server.</p>
+                </div>
+              ) : taskListStatus.error ? (
+                <p className="message message--warning">{taskListStatus.error}</p>
+              ) : taskList.length === 0 ? (
+                <div className="empty-state">
+                  <h3>Aun no hay tareas registradas</h3>
+                  <p>Usa el formulario para guardar la primera tarea del sistema.</p>
                 </div>
               ) : (
-                createdTasks.map((task) => (
+                taskList.map((task) => (
                   <article key={task.id} className="task-card">
                     <div>
                       <h3>{task.titulo}</h3>

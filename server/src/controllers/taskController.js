@@ -36,6 +36,34 @@ function validateTaskPayload(task) {
   return null;
 }
 
+export async function getTasks(_request, response) {
+  try {
+    const queryText = `
+      SELECT
+        id,
+        titulo,
+        descripcion,
+        estado,
+        fecha_limite,
+        fecha_creacion
+      FROM dbo.tareas
+      ORDER BY fecha_creacion DESC, id DESC;
+    `;
+
+    const tasks = await runQuery(queryText);
+
+    return response.status(200).json({
+      message: 'Tareas obtenidas correctamente.',
+      tasks,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: 'No se pudieron obtener las tareas.',
+      error: error.message,
+    });
+  }
+}
+
 export async function createTask(request, response) {
   const task = normalizeTaskPayload(request.body);
   const validationError = validateTaskPayload(task);
